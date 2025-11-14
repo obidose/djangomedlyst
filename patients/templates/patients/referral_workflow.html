@@ -10,12 +10,20 @@
 <div class="card">
     <h2>Refer Patient: {{ patient.name }}</h2>
     
+    <div class="alert alert-info" style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+        <strong>Note:</strong> This patient is currently in <strong>{{ patient.get_location_display_full }}</strong>. 
+        The patient will remain in their current location (location data is managed externally).
+    </div>
+    
+    <p><strong>Current Status:</strong> {{ patient.get_patient_category_display }}</p>
+    <p><strong>Current Location:</strong> {{ patient.get_location_display_full }}</p>
+    
     <form method="post">
         {% csrf_token %}
         
         <div class="form-group">
-            <label>Specialty:</label>
-            <select name="specialty" required>
+            <label>Specialty: *</label>
+            <select name="specialty" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
                 <option value="">Select Specialty</option>
                 {% for code, name in specialty_choices %}
                 <option value="{{ code }}">{{ name }}</option>
@@ -23,18 +31,29 @@
             </select>
         </div>
         
-        <div class="form-group">
+        <div class="form-group" style="margin-top: 1rem;">
             <label>Team:</label>
-            <select name="team" required>
-                <option value="">Select Team</option>
+            <select name="team" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">No team assigned yet</option>
                 {% for code, name in team_choices %}
-                <option value="{{ code }}">{{ name }}</option>
+                    {% if code != 'ED' %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endif %}
                 {% endfor %}
             </select>
+            <small style="color: #666; display: block; margin-top: 0.25rem;">Optional - can be assigned later</small>
         </div>
         
-        <button type="submit" class="btn btn-success">Submit Referral</button>
-        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+        <div class="form-group" style="margin-top: 1rem;">
+            <label>Referral Reason: *</label>
+            <textarea name="referral_reason" required rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;" placeholder="Enter reason for referral to this specialty..."></textarea>
+        </div>
+        
+        <div style="margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-success">Submit Referral</button>
+            <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
     </form>
 </div>
 {% endblock %}
+

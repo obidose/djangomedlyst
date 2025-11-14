@@ -10,7 +10,10 @@
 <h1>{{ patient.name }}</h1>
 
 <div class="card">
-    <h2>Patient Information</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>Patient Information</h2>
+        <a href="{% url 'edit_patient_info' patient.id %}" class="btn">✏️ Edit Info</a>
+    </div>
     <div class="info-grid">
         <div class="info-item">
             <label>NHI Number</label>
@@ -23,6 +26,18 @@
         <div class="info-item">
             <label>Current Specialty</label>
             <div class="value">{{ patient.get_current_parent_specialty_display }}</div>
+        </div>
+        <div class="info-item">
+            <label>Patient Category</label>
+            <div class="value">
+                <strong>{{ patient.get_patient_category_display }}</strong>
+                {% if patient.priority_flag %}
+                <span class="badge" style="background: #dc3545; color: white; margin-left: 0.5rem;">⚠ PRIORITY</span>
+                {% endif %}
+                {% if patient.weekend_review %}
+                <span class="badge" style="background: #ffc107; color: black; margin-left: 0.5rem;">📅 WEEKEND REVIEW</span>
+                {% endif %}
+            </div>
         </div>
         <div class="info-item">
             <label>Admission Type</label>
@@ -40,6 +55,22 @@
             <label>Referral Time</label>
             <div class="value">{{ patient.referral_time|date:"d/m/Y H:i" }}</div>
         </div>
+        {% if patient.referral_to_specialty_datetime %}
+        <div class="info-item">
+            <label>Referred to Specialty</label>
+            <div class="value">{{ patient.referral_to_specialty_datetime|date:"d/m/Y H:i" }}</div>
+        </div>
+        {% endif %}
+        {% if patient.referral_reason %}
+        <div class="info-item">
+            <label>Referral Reason</label>
+            <div class="value" style="grid-column: 1 / -1;">{{ patient.referral_reason|linebreaks }}</div>
+        </div>
+        {% endif %}
+        <div class="info-item">
+            <label>Location</label>
+            <div class="value">{{ patient.get_location_display_full }}</div>
+        </div>
     </div>
     
     <div style="margin-top: 1rem;">
@@ -49,16 +80,35 @@
         </div>
     </div>
     
+    {% if patient.summary %}
+    <div style="margin-top: 1rem;">
+        <div class="info-item">
+            <label>Clinical Summary</label>
+            <div class="value">{{ patient.summary|linebreaks }}</div>
+        </div>
+    </div>
+    {% endif %}
+    
     <div style="margin-top: 1rem;">
         <div class="info-item">
             <label>Past Medical History</label>
             <div class="value">{{ patient.past_medical_history|default:"None recorded" }}</div>
         </div>
     </div>
+    
+    {% if patient.issues %}
+    <div style="margin-top: 1rem;">
+        <div class="info-item">
+            <label>Current Issues</label>
+            <div class="value">{{ patient.issues|linebreaks }}</div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
+{% if patient.should_show_admission_workflow %}
 <div class="card">
-    <h2>Clinical Status</h2>
+    <h2>Admission Workflow Status</h2>
     <div class="info-grid">
         <div class="info-item">
             <label>Clerking Status</label>
@@ -80,15 +130,59 @@
         </div>
     </div>
 </div>
+{% else %}
+<div class="card">
+    <h2>Clinical Status</h2>
+    <p><em>{% if patient.is_ed_patient %}ED patient - admission workflow will be available after referral to specialty team{% else %}Elective admission - clerking/PTWR not required{% endif %}</em></p>
+</div>
+{% endif %}
 
 <div class="card">
     <h2>Actions</h2>
-    <a href="{% url 'referral_workflow' patient.id %}" class="btn">Refer to Team</a>
-    <a href="{% url 'clerking_workflow' patient.id %}" class="btn">Update Clerking</a>
-    <a href="{% url 'ptwr_workflow' patient.id %}" class="btn">Update PTWR</a>
-    <a href="{% url 'general_ward_round' patient.id %}" class="btn">Add Ward Round</a>
-    <a href="{% url 'consult_request' patient.id %}" class="btn">Request Consult</a>
-    <a href="{% url 'add_task' patient.id %}" class="btn">Add Task</a>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <!-- Priority and Weekend Review Flags (NOT available for ED patients) -->
+        {% if not patient.is_ed_patient %}
+        <form method="post" action="{% url 'toggle_priority' patient.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn {% if patient.priority_flag %}btn-danger{% endif %}" title="Toggle priority flag">
+                {% if patient.priority_flag %}🚩 Remove Priority{% else %}⚠ Mark Priority{% endif %}
+            </button>
+        </form>
+        
+        <form method="post" action="{% url 'toggle_weekend_review' patient.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn {% if patient.weekend_review %}btn-warning{% endif %}" title="Toggle weekend review">
+                {% if patient.weekend_review %}📅 Remove Weekend Review{% else %}📅 Weekend Review{% endif %}
+            </button>
+        </form>
+        {% endif %}
+        
+        <!-- Category-specific actions -->
+        {% if patient.is_ed_patient %}
+            <!-- ED Patient: Only show referral -->
+            <a href="{% url 'referral_workflow' patient.id %}" class="btn btn-success">➡ Refer to Specialty Team</a>
+        {% elif patient.is_acute_inprocess %}
+            <!-- Acute In-Process: Show admission workflow actions -->
+            <a href="{% url 'clerking_workflow' patient.id %}" class="btn">📋 Update Clerking</a>
+            <a href="{% url 'ptwr_workflow' patient.id %}" class="btn">🩺 Update PTWR</a>
+            {% if patient.can_complete_admission %}
+                <a href="{% url 'complete_admission' patient.id %}" class="btn btn-success">✓ Complete Admission</a>
+            {% endif %}
+        {% elif patient.is_acute_admitted or patient.is_elective %}
+            <!-- Admitted or Elective: Show change specialty -->
+            <a href="{% url 'change_specialty' patient.id %}" class="btn">🔄 Change Specialty</a>
+        {% endif %}
+        
+        <!-- Update Team (available for all non-ED patients) -->
+        {% if not patient.is_ed_patient %}
+            <a href="{% url 'update_team' patient.id %}" class="btn">👥 Update Team</a>
+        {% endif %}
+        
+        <!-- Common actions for all patients -->
+        <a href="{% url 'general_ward_round' patient.id %}" class="btn">🏥 Add Ward Round</a>
+        <a href="{% url 'consult_request' patient.id %}" class="btn">💬 Request Consult</a>
+        <a href="{% url 'add_task' patient.id %}" class="btn">✓ Add Task</a>
+    </div>
 </div>
 
 <div class="card">
@@ -102,6 +196,7 @@
                 <th>Status</th>
                 <th>Assigned To</th>
                 <th>Created By</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -112,6 +207,16 @@
                 <td>{{ task.get_status_display }}</td>
                 <td>{{ task.assigned_to|default:"Unassigned" }}</td>
                 <td>{{ task.created_by }}</td>
+                <td>
+                    <a href="{% url 'edit_task' task.id %}" class="btn btn-sm">Edit</a>
+                    {% if task.status != 'COMPLETED' %}
+                    <form method="post" action="{% url 'edit_task' task.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="complete">
+                        <button type="submit" class="btn btn-sm btn-success">✓ Complete</button>
+                    </form>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -132,6 +237,7 @@
                 <th>Status</th>
                 <th>Requested By</th>
                 <th>Requested At</th>
+                <th>Comments</th>
             </tr>
         </thead>
         <tbody>
@@ -142,6 +248,7 @@
                 <td>{{ consult.get_status_display }}</td>
                 <td>{{ consult.requested_by }}</td>
                 <td>{{ consult.requested_at|date:"d/m/Y H:i" }}</td>
+                <td>{{ consult.comments|default:"—" }}</td>
             </tr>
             {% endfor %}
         </tbody>

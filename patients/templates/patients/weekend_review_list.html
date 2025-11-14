@@ -1,0 +1,147 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Weekend Review - MedLyst{% endblock %}
+
+{% block content %}
+<h1>Weekend Review List</h1>
+
+<div class="card">
+    <h2>Summary by Specialty</h2>
+    {% if specialty_counts %}
+    <div class="specialty-grid">
+        {% for specialty, count in specialty_counts.items %}
+        <div class="specialty-item">
+            <div class="specialty-name">{{ specialty }}</div>
+            <div class="specialty-count">{{ count }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: #999; text-align: center; padding: 1rem;">No patients flagged for weekend review</p>
+    {% endif %}
+</div>
+
+<div class="filter-bar">
+    <h3>Filters</h3>
+    <form method="get">
+        <label>Team:</label>
+        <select name="team" onchange="this.form.submit()">
+            <option value="">All Teams</option>
+            {% for code, name in team_choices %}
+                {% if code != 'ED' %}
+                <option value="{{ code }}" {% if team_filter == code %}selected{% endif %}>{{ name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        
+        <label>Specialty:</label>
+        <select name="specialty" onchange="this.form.submit()">
+            <option value="">All Specialties</option>
+            {% for code, name in specialty_choices %}
+                {% if code != 'ED' %}
+                <option value="{{ code }}" {% if specialty_filter == code %}selected{% endif %}>{{ name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        
+        <label>Category:</label>
+        <select name="category" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            {% for code, name in category_choices %}
+            <option value="{{ code }}" {% if category_filter == code %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+        
+        <label>Location:</label>
+        <select name="location" onchange="this.form.submit()">
+            <option value="">All Locations</option>
+            {% for code, name in location_choices %}
+                {% if code != 'ED' %}
+                <option value="{{ code }}" {% if location_filter == code %}selected{% endif %}>{{ name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        
+        {% if team_filter or specialty_filter or category_filter or location_filter %}
+        <a href="{% url 'weekend_review_list' %}" class="btn btn-secondary">Clear Filters</a>
+        {% endif %}
+    </form>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>NHI</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th>Team</th>
+            <th>Specialty</th>
+            <th>Priority</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for patient in patients %}
+        <tr>
+            <td>
+                <strong>{{ patient.name }}</strong>
+                <span class="badge" style="background: #ffc107; color: black; font-size: 0.7rem;">📅 WE REVIEW</span>
+            </td>
+            <td>{{ patient.NHI }}</td>
+            <td>{{ patient.get_patient_category_display }}</td>
+            <td>{{ patient.location }}{% if patient.bed_number %} - Bed {{ patient.bed_number }}{% endif %}</td>
+            <td>{{ patient.get_current_responsible_team_display|default:"-" }}</td>
+            <td>{{ patient.get_current_parent_specialty_display|default:"-" }}</td>
+            <td>
+                {% if patient.priority_flag %}
+                <span class="badge badge-danger">⚠ PRIORITY</span>
+                {% else %}
+                <span style="color: #999;">-</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'patient_detail' patient.id %}" class="btn btn-small">View</a>
+                <a href="{% url 'general_ward_round' patient.id %}" class="btn btn-small">Ward Round</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" style="text-align: center; padding: 2rem;">
+                <em>No patients flagged for weekend review{% if team_filter or specialty_filter or category_filter or location_filter %} matching current filters{% endif %}.</em>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p style="margin-top: 1rem; color: #666;">
+    <strong>Total patients for weekend review:</strong> {{ total_count }}
+</p>
+
+<style>
+.specialty-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.specialty-item {
+    background: #fff9e6;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    border: 2px solid #ffc107;
+}
+.specialty-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+.specialty-count {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #f39c12;
+}
+</style>
+{% endblock %}

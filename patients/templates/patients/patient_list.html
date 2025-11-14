@@ -71,6 +71,8 @@
         <tr>
             <th>NHI</th>
             <th>Name</th>
+            <th>Location</th>
+            <th>Category</th>
             <th>Team</th>
             <th>Presenting Complaint</th>
             <th>Clerking</th>
@@ -83,7 +85,17 @@
         {% for patient in patients %}
         <tr>
             <td>{{ patient.nhi_number }}</td>
-            <td><strong>{{ patient.name }}</strong></td>
+            <td>
+                <strong>{{ patient.name }}</strong>
+                {% if patient.priority_flag %}
+                <span class="badge" style="background: #dc3545; color: white; font-size: 0.7rem;">⚠ PRIORITY</span>
+                {% endif %}
+                {% if patient.weekend_review %}
+                <span class="badge" style="background: #ffc107; color: black; font-size: 0.7rem;">📅 WE</span>
+                {% endif %}
+            </td>
+            <td>{{ patient.get_location_display_full }}</td>
+            <td>{{ patient.get_patient_category_display }}</td>
             <td>{{ patient.get_current_responsible_team_display }}</td>
             <td>{{ patient.presenting_complaint }}</td>
             <td>
@@ -115,7 +127,7 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="8" style="text-align: center;">No patients found</td>
+            <td colspan="9" style="text-align: center;">No patients found</td>
         </tr>
         {% endfor %}
     </tbody>

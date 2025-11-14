@@ -1,0 +1,62 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Change Specialty - {{ patient.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Change Specialty: {{ patient.name }}</h2>
+            <small class="text-muted">NHI: {{ patient.nhi }}</small>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <p><strong>Current Specialty:</strong> {{ patient.get_specialty_display }}</p>
+                <p><strong>Current Team:</strong> {{ patient.get_team_display }}</p>
+                <p><strong>Location:</strong> {{ patient.get_location_display_full }}</p>
+                <p><strong>Category:</strong> {{ patient.get_patient_category_display }}</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="specialty" class="form-label">New Specialty *</label>
+                    <select name="specialty" id="specialty" class="form-control" required>
+                        <option value="">Select Specialty</option>
+                        {% for value, label in specialty_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="team" class="form-label">Team</label>
+                    <select name="team" id="team" class="form-control">
+                        <option value="">No team assigned yet</option>
+                        {% for value, label in team_choices %}
+                            {% if value != 'ED' %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Optional - can be assigned later</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="reason" class="form-label">Reason for Change</label>
+                    <textarea name="reason" id="reason" class="form-control" rows="3" placeholder="Enter reason for specialty change"></textarea>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>Note:</strong> The patient will remain in their current location.
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Change Specialty</button>
+                    <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Edit Task - {{ task.patient.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Edit Task</h2>
+            <small class="text-muted">Patient: {{ task.patient.name }} ({{ task.patient.nhi_number }})</small>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update">
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">Task Description *</label>
+                    <textarea name="description" id="description" class="form-control" rows="3" required>{{ task.description }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="priority" class="form-label">Priority</label>
+                        <select name="priority" id="priority" class="form-control">
+                            {% for code, name in priority_choices %}
+                                <option value="{{ code }}" {% if code == task.priority %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-control">
+                            {% for code, name in status_choices %}
+                                <option value="{{ code }}" {% if code == task.status %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="assigned_to" class="form-label">Assigned To</label>
+                    <input type="text" name="assigned_to" id="assigned_to" class="form-control" value="{{ task.assigned_to }}" placeholder="Enter name">
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>Created:</strong> {{ task.created_at|date:"d/m/Y H:i" }} by {{ task.created_by }}<br>
+                    {% if task.completed_at %}
+                    <strong>Completed:</strong> {{ task.completed_at|date:"d/m/Y H:i" }}
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    {% if task.status != 'COMPLETED' %}
+                    <button type="submit" name="action" value="complete" class="btn btn-success">✓ Mark Complete</button>
+                    {% endif %}
+                    <button type="submit" name="action" value="delete" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this task?')">Delete Task</button>
+                    <a href="{% url 'patient_detail' task.patient.id %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.container { max-width: 800px; margin: 2rem auto; }
+.card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.card-header { padding: 1.5rem; border-bottom: 1px solid #e0e0e0; }
+.card-body { padding: 1.5rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333; }
+.form-control { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 1rem; }
+.form-control:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
+.row { display: flex; gap: 1rem; }
+.col-md-6 { flex: 1; }
+.alert { padding: 1rem; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; margin-bottom: 1rem; }
+.d-flex { display: flex; }
+.gap-2 { gap: 0.5rem; }
+.btn { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; text-decoration: none; display: inline-block; }
+.btn-primary { background: #3498db; color: white; }
+.btn-primary:hover { background: #2980b9; }
+.btn-success { background: #27ae60; color: white; }
+.btn-success:hover { background: #229954; }
+.btn-danger { background: #e74c3c; color: white; }
+.btn-danger:hover { background: #c0392b; }
+.btn-secondary { background: #95a5a6; color: white; }
+.btn-secondary:hover { background: #7f8c8d; }
+</style>
+{% endblock %}

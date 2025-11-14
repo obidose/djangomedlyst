@@ -1,0 +1,170 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Take List - MedLyst{% endblock %}
+
+{% block content %}
+<style>
+th a {
+    cursor: pointer;
+    display: block;
+    padding: 0.5rem;
+    margin: -0.5rem;
+}
+th a:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+</style>
+
+<h1>Take List - Admission Workflow</h1>
+
+<div class="card">
+    <h2>Workflow Summary</h2>
+    <div class="info-grid">
+        <div class="info-item">
+            <label>Awaiting Clerking</label>
+            <div class="value stat-value stat-red">{{ workflow_stats.awaiting_clerking }}</div>
+        </div>
+        <div class="info-item">
+            <label>Clerking In Progress</label>
+            <div class="value stat-value stat-orange">{{ workflow_stats.clerking_in_progress }}</div>
+        </div>
+        <div class="info-item">
+            <label>Awaiting PTWR</label>
+            <div class="value stat-value stat-darkorange">{{ workflow_stats.awaiting_ptwr }}</div>
+        </div>
+        <div class="info-item">
+            <label>PTWR In Progress</label>
+            <div class="value stat-value stat-blue">{{ workflow_stats.ptwr_in_progress }}</div>
+        </div>
+        <div class="info-item">
+            <label>Ready to Complete</label>
+            <div class="value stat-value stat-green">{{ workflow_stats.ready_to_complete }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="filter-bar" style="padding: 0.75rem; margin-bottom: 1rem;">
+    <form method="get" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <span style="font-weight: bold;">Filters:</span>
+        <label style="display: flex; align-items: center; gap: 0.3rem; margin: 0;">
+            Team:
+            <select name="team" onchange="this.form.submit()" style="margin: 0;">
+                <option value="">All</option>
+                {% for code, name in team_choices %}
+                    {% if code != 'ED' %}
+                    <option value="{{ code }}" {% if team_filter == code %}selected{% endif %}>{{ name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.3rem; margin: 0;">
+            Specialty:
+            <select name="specialty" onchange="this.form.submit()" style="margin: 0;">
+                <option value="">All</option>
+                {% for code, name in specialty_choices %}
+                    {% if code != 'ED' %}
+                    <option value="{{ code }}" {% if specialty_filter == code %}selected{% endif %}>{{ name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.3rem; margin: 0;">
+            Clerking:
+            <select name="clerking_status" onchange="this.form.submit()" style="margin: 0;">
+                <option value="">All</option>
+                {% for code, name in clerking_choices %}
+                <option value="{{ code }}" {% if clerking_filter == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.3rem; margin: 0;">
+            PTWR:
+            <select name="ptwr_status" onchange="this.form.submit()" style="margin: 0;">
+                <option value="">All</option>
+                {% for code, name in ptwr_choices %}
+                <option value="{{ code }}" {% if ptwr_filter == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        {% if team_filter or specialty_filter or clerking_filter or ptwr_filter %}
+        <a href="{% url 'take_list' %}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.9rem;">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th><a href="?sort=name&order={% if sort_by == 'name' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if team_filter %}&team={{ team_filter }}{% endif %}{% if specialty_filter %}&specialty={{ specialty_filter }}{% endif %}{% if clerking_filter %}&clerking_status={{ clerking_filter }}{% endif %}{% if ptwr_filter %}&ptwr_status={{ ptwr_filter }}{% endif %}" style="color: inherit; text-decoration: none;">Name {% if sort_by == 'name' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=nhi&order={% if sort_by == 'nhi' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if team_filter %}&team={{ team_filter }}{% endif %}{% if specialty_filter %}&specialty={{ specialty_filter }}{% endif %}{% if clerking_filter %}&clerking_status={{ clerking_filter }}{% endif %}{% if ptwr_filter %}&ptwr_status={{ ptwr_filter }}{% endif %}" style="color: inherit; text-decoration: none;">NHI {% if sort_by == 'nhi' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=location&order={% if sort_by == 'location' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if team_filter %}&team={{ team_filter }}{% endif %}{% if specialty_filter %}&specialty={{ specialty_filter }}{% endif %}{% if clerking_filter %}&clerking_status={{ clerking_filter }}{% endif %}{% if ptwr_filter %}&ptwr_status={{ ptwr_filter }}{% endif %}" style="color: inherit; text-decoration: none;">Location {% if sort_by == 'location' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=team&order={% if sort_by == 'team' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if team_filter %}&team={{ team_filter }}{% endif %}{% if specialty_filter %}&specialty={{ specialty_filter }}{% endif %}{% if clerking_filter %}&clerking_status={{ clerking_filter }}{% endif %}{% if ptwr_filter %}&ptwr_status={{ ptwr_filter }}{% endif %}" style="color: inherit; text-decoration: none;">Team {% if sort_by == 'team' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=specialty&order={% if sort_by == 'specialty' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if team_filter %}&team={{ team_filter }}{% endif %}{% if specialty_filter %}&specialty={{ specialty_filter }}{% endif %}{% if clerking_filter %}&clerking_status={{ clerking_filter }}{% endif %}{% if ptwr_filter %}&ptwr_status={{ ptwr_filter }}{% endif %}" style="color: inherit; text-decoration: none;">Specialty {% if sort_by == 'specialty' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=clerking&order={% if sort_by == 'clerking' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if team_filter %}&team={{ team_filter }}{% endif %}{% if specialty_filter %}&specialty={{ specialty_filter }}{% endif %}{% if clerking_filter %}&clerking_status={{ clerking_filter }}{% endif %}{% if ptwr_filter %}&ptwr_status={{ ptwr_filter }}{% endif %}" style="color: inherit; text-decoration: none;">Clerking {% if sort_by == 'clerking' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=ptwr&order={% if sort_by == 'ptwr' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if team_filter %}&team={{ team_filter }}{% endif %}{% if specialty_filter %}&specialty={{ specialty_filter }}{% endif %}{% if clerking_filter %}&clerking_status={{ clerking_filter }}{% endif %}{% if ptwr_filter %}&ptwr_status={{ ptwr_filter }}{% endif %}" style="color: inherit; text-decoration: none;">PTWR {% if sort_by == 'ptwr' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=referred&order={% if sort_by == 'referred' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if team_filter %}&team={{ team_filter }}{% endif %}{% if specialty_filter %}&specialty={{ specialty_filter }}{% endif %}{% if clerking_filter %}&clerking_status={{ clerking_filter }}{% endif %}{% if ptwr_filter %}&ptwr_status={{ ptwr_filter }}{% endif %}" style="color: inherit; text-decoration: none;">Referred {% if sort_by == 'referred' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}</a></th>
+            <th>Referral Reason</th>
+            <th><a href="?sort=arrival&order={% if sort_by == 'arrival' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if team_filter %}&team={{ team_filter }}{% endif %}{% if specialty_filter %}&specialty={{ specialty_filter }}{% endif %}{% if clerking_filter %}&clerking_status={{ clerking_filter }}{% endif %}{% if ptwr_filter %}&ptwr_status={{ ptwr_filter }}{% endif %}" style="color: inherit; text-decoration: none;">Arrival {% if sort_by == 'arrival' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}</a></th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for patient in patients %}
+        <tr>
+            <td>
+                <strong>{{ patient.name }}</strong>
+                {% if patient.priority_flag %}
+                <span class="badge" style="background: #dc3545; color: white; font-size: 0.7rem;">⚠ PRIORITY</span>
+                {% endif %}
+                {% if patient.weekend_review %}
+                <span class="badge" style="background: #ffc107; color: black; font-size: 0.7rem;">📅 WE</span>
+                {% endif %}
+            </td>
+            <td>{{ patient.nhi_number }}</td>
+            <td>{{ patient.get_location_display_full }}</td>
+            <td>{{ patient.get_current_responsible_team_display }}</td>
+            <td>{{ patient.get_current_parent_specialty_display }}</td>
+            <td>
+                <span class="badge {% if patient.clerking_status == 'COMPLETED' %}badge-success{% elif patient.clerking_status == 'IN_PROGRESS' %}badge-warning{% elif patient.clerking_status == 'AWAITING' %}badge-danger{% else %}badge-secondary{% endif %}">
+                    {{ patient.get_clerking_status_display }}
+                </span>
+                {% if patient.clerking_doctor %}
+                <br><small>{{ patient.clerking_doctor }}</small>
+                {% endif %}
+            </td>
+            <td>
+                <span class="badge {% if patient.post_take_ward_round_status == 'COMPLETED' %}badge-success{% elif patient.post_take_ward_round_status == 'IN_PROGRESS' %}badge-warning{% elif patient.post_take_ward_round_status == 'AWAITING' %}badge-danger{% else %}badge-secondary{% endif %}">
+                    {{ patient.get_post_take_ward_round_status_display }}
+                </span>
+                {% if patient.ptwr_doctor %}
+                <br><small>{{ patient.ptwr_doctor }}</small>
+                {% endif %}
+            </td>
+            <td>{% if patient.referral_to_specialty_datetime %}{{ patient.referral_to_specialty_datetime|date:"d/m H:i" }}{% else %}-{% endif %}</td>
+            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ patient.referral_reason }}">{{ patient.referral_reason|truncatewords:10|default:"-" }}</td>
+            <td>{{ patient.datetime_of_arrival|date:"d/m H:i" }}</td>
+            <td>
+                <a href="{% url 'patient_detail' patient.id %}" class="btn btn-small">View</a>
+                {% if patient.clerking_status == 'AWAITING' or patient.clerking_status == 'IN_PROGRESS' %}
+                <a href="{% url 'clerking_workflow' patient.id %}" class="btn btn-small">Clerk</a>
+                {% elif patient.post_take_ward_round_status == 'AWAITING' or patient.post_take_ward_round_status == 'IN_PROGRESS' %}
+                <a href="{% url 'ptwr_workflow' patient.id %}" class="btn btn-small">PTWR</a>
+                {% elif patient.clerking_status == 'COMPLETED' and patient.post_take_ward_round_status == 'COMPLETED' %}
+                <a href="{% url 'complete_admission' patient.id %}" class="btn btn-small btn-success">Complete</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="11" style="text-align: center; padding: 2rem;">
+                <em>No patients in take list. Only acute in-process admissions appear here.</em>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p style="margin-top: 1rem; color: #666;">
+    <strong>Total patients on take list:</strong> {{ patients.count }}
+</p>
+{% endblock %}

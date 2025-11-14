@@ -1,0 +1,46 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Complete Admission - MedLyst{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div class="card">
+    <h2>Complete Admission: {{ patient.name }}</h2>
+    
+    <p>This will mark the acute admission process as complete and remove the patient from the take list.</p>
+    
+    <div class="info-grid" style="margin: 1rem 0;">
+        <div class="info-item">
+            <label>Patient</label>
+            <div class="value">{{ patient.name }} ({{ patient.nhi_number }})</div>
+        </div>
+        <div class="info-item">
+            <label>Clerking Status</label>
+            <div class="value">{{ patient.get_clerking_status_display }}</div>
+        </div>
+        <div class="info-item">
+            <label>PTWR Status</label>
+            <div class="value">{{ patient.get_post_take_ward_round_status_display }}</div>
+        </div>
+        <div class="info-item">
+            <label>Location</label>
+            <div class="value">{{ patient.get_location_display_full }}</div>
+        </div>
+    </div>
+    
+    {% if patient.clerking_status != 'COMPLETED' or patient.post_take_ward_round_status != 'COMPLETED' %}
+    <div class="message error" style="margin: 1rem 0;">
+        <strong>Warning:</strong> Clerking and/or PTWR are not marked as completed. Are you sure you want to complete this admission?
+    </div>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Complete Admission</button>
+        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

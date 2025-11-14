@@ -45,6 +45,11 @@
             background-color: #2c3e50;
         }
         
+        .nav a.active {
+            background-color: #2c3e50;
+            font-weight: bold;
+        }
+        
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -254,6 +259,47 @@
             font-size: 1rem;
             color: #333;
         }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .stat-red { color: #e74c3c; }
+        .stat-orange { color: #f39c12; }
+        .stat-darkorange { color: #e67e22; }
+        .stat-blue { color: #3498db; }
+        .stat-green { color: #27ae60; }
+        .stat-gray { color: #95a5a6; }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        
+        .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-secondary {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
     </style>
 </head>
 <body>
@@ -262,7 +308,10 @@
     </div>
     
     <div class="nav">
-        <a href="{% url 'patient_list' %}">Patient List</a>
+        <a href="{% url 'patient_list' %}">All Patients</a>
+        <a href="{% url 'take_list' %}">Take List</a>
+        <a href="{% url 'weekend_review_list' %}">Weekend Review</a>
+        <a href="{% url 'consults_list' %}">Consults</a>
         <a href="/admin/">Admin Panel</a>
     </div>
     

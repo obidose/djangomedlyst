@@ -1,0 +1,151 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Consults - MedLyst{% endblock %}
+
+{% block content %}
+<h1>Consultation Requests</h1>
+
+<div class="card">
+    <h2>Summary by Status</h2>
+    <div class="info-grid">
+        <div class="info-item">
+            <label>Requested</label>
+            <div class="value stat-value stat-red">{{ requested_count }}</div>
+        </div>
+        <div class="info-item">
+            <label>Accepted</label>
+            <div class="value stat-value stat-orange">{{ accepted_count }}</div>
+        </div>
+        <div class="info-item">
+            <label>In Progress</label>
+            <div class="value stat-value stat-blue">{{ in_progress_count }}</div>
+        </div>
+        <div class="info-item">
+            <label>Completed</label>
+            <div class="value stat-value stat-green">{{ completed_count }}</div>
+        </div>
+        <div class="info-item">
+            <label>Declined</label>
+            <div class="value stat-value stat-gray">{{ declined_count }}</div>
+        </div>
+    </div>
+</div>
+
+{% if specialty_counts %}
+<div class="card">
+    <h2>Active Consults by Specialty</h2>
+    <div class="specialty-grid">
+        {% for specialty, count in specialty_counts.items %}
+        <div class="specialty-item">
+            <div class="specialty-name">{{ specialty }}</div>
+            <div class="specialty-count">{{ count }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="filter-bar">
+    <h3>Filters</h3>
+    <form method="get">
+        <label>Specialty:</label>
+        <select name="specialty" onchange="this.form.submit()">
+            <option value="">All Specialties</option>
+            {% for code, name in specialty_choices %}
+                <option value="{{ code }}" {% if specialty_filter == code %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+        
+        <label>Status:</label>
+        <select name="status" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            {% for code, name in status_choices %}
+                <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+        
+        <a href="{% url 'consults_list' %}" class="btn btn-sm">Clear Filters</a>
+    </form>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Patient</th>
+            <th>NHI</th>
+            <th>Specialty</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Requested By</th>
+            <th>Requested At</th>
+            <th>Reviewed By</th>
+            <th>Comments</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for consult in consults %}
+        <tr>
+            <td><a href="{% url 'patient_detail' consult.patient.id %}">{{ consult.patient.name }}</a></td>
+            <td>{{ consult.patient.nhi_number }}</td>
+            <td><strong>{{ consult.get_specialty_display }}</strong></td>
+            <td>{{ consult.reason|truncatewords:10 }}</td>
+            <td>
+                <span class="badge 
+                    {% if consult.status == 'REQUESTED' %}badge-danger
+                    {% elif consult.status == 'ACCEPTED' %}badge-warning
+                    {% elif consult.status == 'IN_PROGRESS' %}badge-info
+                    {% elif consult.status == 'COMPLETED' %}badge-success
+                    {% else %}badge-secondary{% endif %}">
+                    {{ consult.get_status_display }}
+                </span>
+            </td>
+            <td>{{ consult.requested_by }}</td>
+            <td>{{ consult.requested_at|date:"d/m/Y H:i" }}</td>
+            <td>{{ consult.reviewed_by|default:"-" }}</td>
+            <td>{{ consult.comments|default:"—"|truncatewords:8 }}</td>
+            <td>
+                <a href="{% url 'update_consult_status' consult.id %}" class="btn btn-sm">Update</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="10" style="text-align: center; padding: 2rem; color: #999;">
+                No consults found matching the current filters
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<style>
+.specialty-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.specialty-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+}
+.specialty-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+.specialty-count {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #3498db;
+}
+.badge-danger { background: #e74c3c; }
+.badge-warning { background: #f39c12; }
+.badge-info { background: #3498db; }
+.badge-success { background: #27ae60; }
+.badge-secondary { background: #95a5a6; }
+</style>
+{% endblock %}

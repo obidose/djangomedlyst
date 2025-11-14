@@ -1,0 +1,40 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Request Consult - MedLyst{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div class="card">
+    <h2>Request Consult: {{ patient.name }}</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Specialty:</label>
+            <select name="specialty" required>
+                <option value="">Select Specialty</option>
+                {% for code, name in specialty_choices %}
+                <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Reason for Consult:</label>
+            <textarea name="reason" rows="4" required placeholder="Reason for requesting consult"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Requested By:</label>
+            <input type="text" name="requested_by" required placeholder="e.g., Dr. Smith">
+        </div>
+        
+        <button type="submit" class="btn btn-success">Submit Request</button>
+        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

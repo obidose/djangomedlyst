@@ -1,0 +1,40 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Refer Patient - MedLyst{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div class="card">
+    <h2>Refer Patient: {{ patient.name }}</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Specialty:</label>
+            <select name="specialty" required>
+                <option value="">Select Specialty</option>
+                {% for code, name in specialty_choices %}
+                <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Team:</label>
+            <select name="team" required>
+                <option value="">Select Team</option>
+                {% for code, name in team_choices %}
+                <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-success">Submit Referral</button>
+        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

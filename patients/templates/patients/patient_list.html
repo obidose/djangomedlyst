@@ -1,0 +1,123 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Patient List - MedLyst{% endblock %}
+
+{% block content %}
+<h1>Patient List</h1>
+
+<div class="filter-bar">
+    <form method="get">
+        <div class="filter-group">
+            <label>Team:</label>
+            <select name="team">
+                <option value="">All Teams</option>
+                {% for code, name in team_choices %}
+                <option value="{{ code }}" {% if code == team_filter %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label>Specialty:</label>
+            <select name="specialty">
+                <option value="">All Specialties</option>
+                {% for code, name in specialty_choices %}
+                <option value="{{ code }}" {% if code == specialty_filter %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label>Clerking Status:</label>
+            <select name="clerking_status">
+                <option value="">All</option>
+                {% for code, name in clerking_choices %}
+                <option value="{{ code }}" {% if code == clerking_filter %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label>PTWR Status:</label>
+            <select name="ptwr_status">
+                <option value="">All</option>
+                {% for code, name in ptwr_choices %}
+                <option value="{{ code }}" {% if code == ptwr_filter %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label>Admission Type:</label>
+            <select name="admission_type">
+                <option value="">All</option>
+                {% for code, name in admission_choices %}
+                <option value="{{ code }}" {% if code == admission_filter %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <button type="submit" class="btn">Filter</button>
+            <a href="{% url 'patient_list' %}" class="btn btn-secondary">Clear</a>
+        </div>
+    </form>
+</div>
+
+<p><strong>Total Patients: {{ patients.count }}</strong></p>
+
+<table>
+    <thead>
+        <tr>
+            <th>NHI</th>
+            <th>Name</th>
+            <th>Team</th>
+            <th>Presenting Complaint</th>
+            <th>Clerking</th>
+            <th>PTWR</th>
+            <th>Arrival</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for patient in patients %}
+        <tr>
+            <td>{{ patient.nhi_number }}</td>
+            <td><strong>{{ patient.name }}</strong></td>
+            <td>{{ patient.get_current_responsible_team_display }}</td>
+            <td>{{ patient.presenting_complaint }}</td>
+            <td>
+                {% if patient.clerking_status == 'AWAITING' %}
+                <span class="badge badge-awaiting">Awaiting</span>
+                {% elif patient.clerking_status == 'IN_PROGRESS' %}
+                <span class="badge badge-in-progress">In Progress</span>
+                {% elif patient.clerking_status == 'COMPLETED' %}
+                <span class="badge badge-completed">Completed</span>
+                {% else %}
+                <span class="badge badge-not-required">N/A</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if patient.post_take_ward_round_status == 'AWAITING' %}
+                <span class="badge badge-awaiting">Awaiting</span>
+                {% elif patient.post_take_ward_round_status == 'IN_PROGRESS' %}
+                <span class="badge badge-in-progress">In Progress</span>
+                {% elif patient.post_take_ward_round_status == 'COMPLETED' %}
+                <span class="badge badge-completed">Completed</span>
+                {% else %}
+                <span class="badge badge-not-required">N/A</span>
+                {% endif %}
+            </td>
+            <td>{{ patient.datetime_of_arrival|date:"d/m/Y H:i" }}</td>
+            <td>
+                <a href="{% url 'patient_detail' patient.id %}" class="btn btn-small">View</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" style="text-align: center;">No patients found</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

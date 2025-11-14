@@ -1,0 +1,44 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Update PTWR - MedLyst{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div class="card">
+    <h2>Update Post-Take Ward Round: {{ patient.name }}</h2>
+    
+    <p><strong>Current Status:</strong> {{ patient.get_post_take_ward_round_status_display }}</p>
+    {% if patient.ptwr_doctor %}
+    <p><strong>Current Doctor:</strong> {{ patient.ptwr_doctor }}</p>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Status:</label>
+            <select name="status" required>
+                {% for code, name in status_choices %}
+                <option value="{{ code }}" {% if code == patient.post_take_ward_round_status %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Doctor:</label>
+            <input type="text" name="doctor" value="{{ patient.ptwr_doctor }}" placeholder="e.g., Dr. Smith">
+        </div>
+        
+        <div class="form-group">
+            <label>Notes:</label>
+            <textarea name="notes" rows="4" placeholder="Ward round notes (if completing)"></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-success">Update Status</button>
+        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}{{ patient.name }} - MedLyst{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{% url 'patient_list' %}" class="btn btn-secondary">← Back to List</a>
+</div>
+
+<h1>{{ patient.name }}</h1>
+
+<div class="card">
+    <h2>Patient Information</h2>
+    <div class="info-grid">
+        <div class="info-item">
+            <label>NHI Number</label>
+            <div class="value">{{ patient.nhi_number }}</div>
+        </div>
+        <div class="info-item">
+            <label>Current Team</label>
+            <div class="value">{{ patient.get_current_responsible_team_display }}</div>
+        </div>
+        <div class="info-item">
+            <label>Current Specialty</label>
+            <div class="value">{{ patient.get_current_parent_specialty_display }}</div>
+        </div>
+        <div class="info-item">
+            <label>Admission Type</label>
+            <div class="value">{{ patient.get_admission_type_display }}</div>
+        </div>
+        <div class="info-item">
+            <label>Datetime of Arrival</label>
+            <div class="value">{{ patient.datetime_of_arrival|date:"d/m/Y H:i" }}</div>
+        </div>
+        <div class="info-item">
+            <label>Referral Source</label>
+            <div class="value">{{ patient.get_referral_source_display }}</div>
+        </div>
+        <div class="info-item">
+            <label>Referral Time</label>
+            <div class="value">{{ patient.referral_time|date:"d/m/Y H:i" }}</div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 1rem;">
+        <div class="info-item">
+            <label>Presenting Complaint</label>
+            <div class="value">{{ patient.presenting_complaint }}</div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 1rem;">
+        <div class="info-item">
+            <label>Past Medical History</label>
+            <div class="value">{{ patient.past_medical_history|default:"None recorded" }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Clinical Status</h2>
+    <div class="info-grid">
+        <div class="info-item">
+            <label>Clerking Status</label>
+            <div class="value">
+                {{ patient.get_clerking_status_display }}
+                {% if patient.clerking_doctor %}
+                <br><small>by {{ patient.clerking_doctor }}</small>
+                {% endif %}
+            </div>
+        </div>
+        <div class="info-item">
+            <label>Post-Take Ward Round</label>
+            <div class="value">
+                {{ patient.get_post_take_ward_round_status_display }}
+                {% if patient.ptwr_doctor %}
+                <br><small>by {{ patient.ptwr_doctor }}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Actions</h2>
+    <a href="{% url 'referral_workflow' patient.id %}" class="btn">Refer to Team</a>
+    <a href="{% url 'clerking_workflow' patient.id %}" class="btn">Update Clerking</a>
+    <a href="{% url 'ptwr_workflow' patient.id %}" class="btn">Update PTWR</a>
+    <a href="{% url 'general_ward_round' patient.id %}" class="btn">Add Ward Round</a>
+    <a href="{% url 'consult_request' patient.id %}" class="btn">Request Consult</a>
+    <a href="{% url 'add_task' patient.id %}" class="btn">Add Task</a>
+</div>
+
+<div class="card">
+    <h2>Pending Tasks ({{ tasks.count }})</h2>
+    {% if tasks %}
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Created By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.description }}</td>
+                <td>{{ task.get_priority_display }}</td>
+                <td>{{ task.get_status_display }}</td>
+                <td>{{ task.assigned_to|default:"Unassigned" }}</td>
+                <td>{{ task.created_by }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No pending tasks</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Consult Requests ({{ consult_requests.count }})</h2>
+    {% if consult_requests %}
+    <table>
+        <thead>
+            <tr>
+                <th>Specialty</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Requested By</th>
+                <th>Requested At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for consult in consult_requests %}
+            <tr>
+                <td>{{ consult.get_specialty_display }}</td>
+                <td>{{ consult.reason }}</td>
+                <td>{{ consult.get_status_display }}</td>
+                <td>{{ consult.requested_by }}</td>
+                <td>{{ consult.requested_at|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No consult requests</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Recent Ward Rounds ({{ ward_rounds.count }})</h2>
+    {% if ward_rounds %}
+    <table>
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Doctor</th>
+                <th>Notes</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for round in ward_rounds %}
+            <tr>
+                <td>{{ round.get_ward_round_type_display }}</td>
+                <td>{{ round.doctor }}</td>
+                <td>{{ round.notes|truncatewords:20 }}</td>
+                <td>{{ round.timestamp|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No ward rounds recorded</p>
+    {% endif %}
+</div>
+{% endblock %}

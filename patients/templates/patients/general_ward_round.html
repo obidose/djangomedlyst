@@ -1,0 +1,30 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Add Ward Round - MedLyst{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div class="card">
+    <h2>Add General Ward Round: {{ patient.name }}</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Doctor:</label>
+            <input type="text" name="doctor" required placeholder="e.g., Dr. Smith">
+        </div>
+        
+        <div class="form-group">
+            <label>Notes:</label>
+            <textarea name="notes" rows="6" required placeholder="Ward round notes"></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-success">Save Ward Round</button>
+        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

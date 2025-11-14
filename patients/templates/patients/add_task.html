@@ -1,0 +1,44 @@
+{% extends 'patients/base.html' %}
+
+{% block title %}Add Task - MedLyst{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div class="card">
+    <h2>Add Task: {{ patient.name }}</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Description:</label>
+            <textarea name="description" rows="3" required placeholder="Task description"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Priority:</label>
+            <select name="priority" required>
+                {% for code, name in priority_choices %}
+                <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Assigned To:</label>
+            <input type="text" name="assigned_to" placeholder="e.g., Dr. Smith (optional)">
+        </div>
+        
+        <div class="form-group">
+            <label>Created By:</label>
+            <input type="text" name="created_by" required placeholder="e.g., Dr. Jones">
+        </div>
+        
+        <button type="submit" class="btn btn-success">Add Task</button>
+        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

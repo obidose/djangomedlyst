@@ -28,6 +28,13 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['*'] if DEBUG else ['.herokuapp.com', '.railway.app', '.ondigitalocean.app', 'localhost', '127.0.0.1']
 
+# CSRF trusted origins for Railway and other platforms
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.railway.app',
+    'https://*.herokuapp.com', 
+    'https://*.ondigitalocean.app',
+]
+
 
 # Application definition
 
@@ -148,9 +155,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_REDIRECT_EXEMPT = []
-    SECURE_SSL_REDIRECT = True
+    # Disable SSL redirect for Railway (they handle SSL termination)
+    # SECURE_SSL_REDIRECT = True  # Commented out for Railway
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    
+    # Only enable HSTS if we're sure about SSL setup
+    if 'railway.app' not in os.environ.get('RAILWAY_PUBLIC_DOMAIN', ''):
+        SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+        SECURE_HSTS_SECONDS = 31536000

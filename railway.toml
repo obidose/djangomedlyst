@@ -8,3 +8,4 @@ healthcheckTimeout = 300
 
 [env]
 DJANGO_SETTINGS_MODULE = "medlyst_project.settings"
+DEBUG = "False"

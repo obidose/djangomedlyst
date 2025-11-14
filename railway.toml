@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "chmod +x start.sh && ./start.sh"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+
+[env]
+DJANGO_SETTINGS_MODULE = "medlyst_project.settings"

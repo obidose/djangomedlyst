@@ -40,16 +40,16 @@ After deploying to Railway, you need to run these commands to set up your databa
    python manage.py reset_admin
    ```
 
-## Method 3: One-time Setup Script
+## Method 3: Automatic Setup (Current Implementation)
 
-You can also add this to your deployment by updating the Procfile:
+The app now includes automatic setup via `start.sh` script and `railway.toml` configuration:
 
-```
-release: python manage.py migrate && python manage.py generate_dummy_data && python manage.py reset_admin
-web: gunicorn medlyst_project.wsgi
-```
+- **Automatic migrations** on every deployment
+- **Smart dummy data generation** - only creates data if database is empty  
+- **Admin user setup** - creates/resets admin user (admin/admin123)
+- **Static file collection** for production
 
-This will automatically run the setup commands on each deployment.
+This runs automatically when Railway deploys the app.
 
 ## Admin Access
 
